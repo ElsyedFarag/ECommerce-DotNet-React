@@ -1,3 +1,4 @@
+using Ecommerce.Application.Helpers;
 using Ecommerce.Application.Services;
 using Ecommerce.Domain.Interfaces;
 using Ecommerce.Infrastructure.Data;
@@ -21,6 +22,11 @@ builder.Services.AddScoped<CategoryService>();
 // Add Swagger services
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddAutoMapper(cfg =>
+{
+    cfg.AddProfile<MappingProfile>();
+});
 
 var app = builder.Build();
 

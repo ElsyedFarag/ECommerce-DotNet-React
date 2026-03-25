@@ -16,9 +16,12 @@ public class ProductService
     {
         return await _repo.GetAllAsync();
     }
-
-    public async Task AddProduct(Product product)
+    public async Task<Product?> GetProductById(int id)
     {
-        await _repo.AddAsync(product);
+        return await _repo.GetByIdAsync(id);
+    }
+    public async Task<Product> AddProduct(Product product)
+    {
+        return await _repo.AddAsync(product);
     }
 }

@@ -16,17 +16,30 @@ public class ProductRepository : IProductRepository
 
     public async Task<IEnumerable<Product>> GetAllAsync()
     {
-        return await _context.Products.ToListAsync();
+        return await _context.Products
+            .Include(c=>c.Category)
+            .Include(im=>im.Images)
+            .Include(vr=>vr.Variants)
+            .Include(sp => sp.ProductSpecifications)
+            .Include(rv=>rv.Reviews)
+            .ToListAsync();
     }
 
     public async Task<Product?> GetByIdAsync(int id)
     {
-        return await _context.Products.FindAsync(id);
+        return await _context.Products
+            .Include(c => c.Category)
+            .Include(im => im.Images)
+            .Include(vr => vr.Variants)
+            .Include(sp => sp.ProductSpecifications)
+            .Include(rv => rv.Reviews)
+            .FirstOrDefaultAsync(x=>x.Id == id);
     }
 
-    public async Task AddAsync(Product product)
+    public async Task<Product> AddAsync(Product product)
     {
         _context.Products.Add(product);
         await _context.SaveChangesAsync();
+        return product;
     }
 }

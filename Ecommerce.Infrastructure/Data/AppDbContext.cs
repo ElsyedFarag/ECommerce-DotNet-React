@@ -10,6 +10,10 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<Product> Products { get; set; }
+    public DbSet<ProductImage> ProductImages { get; set; }
+    public DbSet<ProductReview> ProductReviews { get; set; }
+    public DbSet<ProductSpecification> ProductSpecifications { get; set; }
+    public DbSet<ProductVariant> ProductVariants { get; set; }
     public DbSet<Category> Categories { get; set; }
 
 }

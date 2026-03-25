@@ -1,4 +1,6 @@
-﻿using Ecommerce.Application.Services;
+﻿using AutoMapper;
+using Ecommerce.Application.Dtos.Products;
+using Ecommerce.Application.Services;
 using Ecommerce.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,23 +11,44 @@ namespace Ecommerce.API.Controllers;
 public class ProductsController : ControllerBase
 {
     private readonly ProductService _service;
-
-    public ProductsController(ProductService service)
+    private readonly IMapper _mapper;
+    public ProductsController(ProductService service, IMapper mapper)
     {
         _service = service;
+        _mapper = mapper;
     }
 
     [HttpGet]
     public async Task<IActionResult> Get()
     {
         var products = await _service.GetProducts();
-        return Ok(products);
+        var responseDtos = _mapper.Map<IEnumerable<ProductDetailsDto>>(products);
+        return Ok(responseDtos);
     }
-
-    [HttpPost]
-    public async Task<IActionResult> Create(Product product)
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id)
     {
-        await _service.AddProduct(product);
-        return Ok();
+        var product = await _service.GetProductById(id);
+
+        if (product == null)
+            return NotFound("Product not found");
+
+        var responseDto = _mapper.Map<ProductDetailsDto>(product);
+
+        return Ok(responseDto);
+    }
+    [HttpPost("AddProduct")]
+    public async Task<IActionResult> Create(ProductCreateDto model)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var product = _mapper.Map<Product>(model);
+
+        var result = await _service.AddProduct(product);
+
+        var responseDto = _mapper.Map<ProductDetailsDto>(result);
+
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, responseDto);
     }
 }
