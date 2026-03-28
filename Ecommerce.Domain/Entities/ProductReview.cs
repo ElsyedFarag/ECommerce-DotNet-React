@@ -5,13 +5,13 @@ public class ProductReview
 
     public int Rating { get; set; }
 
-    public string Comment { get; set; }
+    public string Comment { get; set; } = null!;
 
-    public string UserName { get; set; }
+    public string UserName { get; set; } = null!;
 
     public DateTime CreatedAt { get; set; }
 
     public int ProductId { get; set; }
 
-    public Product Product { get; set; }
+    public Product? Product { get; set; }
 }

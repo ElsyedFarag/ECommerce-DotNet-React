@@ -17,6 +17,7 @@ public class ProductRepository : IProductRepository
     public async Task<IEnumerable<Product>> GetAllAsync()
     {
         return await _context.Products
+            .AsNoTracking()
             .Include(c=>c.Category)
             .Include(im=>im.Images)
             .Include(vr=>vr.Variants)
@@ -41,5 +42,28 @@ public class ProductRepository : IProductRepository
         _context.Products.Add(product);
         await _context.SaveChangesAsync();
         return product;
+    }
+
+    public async Task<bool> DeleteAsync(int? id)
+    {
+        if(!id.HasValue) return false;
+        var product = await _context.Products.FindAsync(id);
+        if(product == null) return false;
+
+        product.IsDeleted = true;
+        product.DeletedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    public IQueryable<Product> GetProductsQueryable()
+    {
+        return _context.Products
+                     .Where(p => !p.IsDeleted)
+                     .Include(p => p.Images)
+                     .Include(p => p.Reviews)
+                     .Include(p => p.Variants)
+                     .Include(p => p.ProductSpecifications)
+                     .Include(p => p.Category);
     }
 }

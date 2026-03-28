@@ -3,9 +3,9 @@ public class ProductVariant
 {
     public int Id { get; set; }
 
-    public string Name { get; set; }   // Resistance
+    public string Name { get; set; } = null!;
 
-    public string Value { get; set; }  // 1K
+    public string Value { get; set; } = null!;
 
     public decimal? Price { get; set; }
 
@@ -13,5 +13,5 @@ public class ProductVariant
 
     public int ProductId { get; set; }
 
-    public Product Product { get; set; }
+    public Product? Product { get; set; }
 }

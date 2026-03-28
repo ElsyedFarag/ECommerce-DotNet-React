@@ -1,4 +1,6 @@
-﻿namespace Ecommerce.Application.Dtos.Products;
+﻿using Microsoft.AspNetCore.Http;
+
+namespace Ecommerce.Application.Dtos.Products;
 public class ProductCreateDto
 {
     public string Name { get; set; }
@@ -9,6 +11,8 @@ public class ProductCreateDto
     public int CategoryId { get; set; }
 
     public List<ProductVariantDto>? Variants { get; set; }
-    public List<ProductImageDto>? Images { get; set; }
+    public List<IFormFile>? Images { get; set; }
+    public int MainImageIndex { get; set; } = 0;
+
     public List<ProductSpecificationDto>? Specifications { get; set; }
 }
