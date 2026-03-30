@@ -1,4 +1,5 @@
 ﻿using Ecommerce.Application.Dtos.Categories;
+using Ecommerce.Application.Dtos.Products;
 using Ecommerce.Application.Services;
 using Ecommerce.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
@@ -17,17 +18,62 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> Get(int pageNumber = 1, int pageSize = 10, string? search = null)
+    public async Task<IActionResult> Get()
     {
-        var result = await _service.GetCategories(pageNumber, pageSize, search);
+        var categories = await _service.GetCategories();
 
-        return Ok(new
+        var result = categories.Select(c => new CategoryDetailsDto
         {
-            totalCount = result.TotalCount,
-            pageNumber,
-            pageSize,
-            data = result.Data
-        });
+            Name = c.Name,
+            Description = c.Description,
+            Products = c.Products.Select(product => new ProductDetailsDto
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Slug = product.Slug,
+                SKU = product.SKU,
+                IsActive = product.IsActive,
+                IsDeleted = product.IsDeleted,
+                DeletedAt = product.DeletedAt,
+                ManageStock = product.ManageStock,
+                Description = product.Description ?? "-",
+                Price = product.Price,
+                DiscountPrice = product.DiscountPrice,
+                TaxRate = product.TaxRate,
+                Stock = product.Stock,
+                Reviews = product.Reviews.Select(r => new ProductReviewDto
+                {
+                    Rating = r.Rating,
+                    Comment = r.Comment,
+                    CreatedAt = r.CreatedAt,
+                    UserName = r.UserName
+                }).ToList(),
+                Specifications = product.ProductSpecifications.Select(s => new ProductSpecificationDto
+                {
+                    Key = s.Key,
+                    Value = s.Value
+                }).ToList(),
+                Images = product.Images.Select(i => new ProductImageDto
+                {
+                    Url = i.Url,
+                    IsMain = i.IsMain
+                }).ToList(),
+                Category = new CategoryDto
+                {
+                    Name = product.Category?.Name ?? "-",
+                    Description = product.Category?.Description ?? "-"
+                },
+                Variants = product.Variants.Select(v => new ProductVariantDto
+                {
+                    Value = v.Value,
+                    Name = v.Name,
+                    Price = v.Price,
+                }).ToList()
+            }).ToList()
+
+        }).ToList();
+
+        return Ok(result);
     }
 
     [HttpGet("GetCategoryById/{id}")]
@@ -38,8 +84,57 @@ public class CategoriesController : ControllerBase
         if (category == null)
             return NotFound("Category not found");
 
+        var result = new CategoryDetailsDto
+        {
+            Name = category.Name,
+            Description = category.Description,
+            Products = category.Products.Select(product => new ProductDetailsDto
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Slug = product.Slug,
+                SKU = product.SKU,
+                IsActive = product.IsActive,
+                IsDeleted = product.IsDeleted,
+                DeletedAt = product.DeletedAt,
+                ManageStock = product.ManageStock,
+                Description = product.Description ?? "-",
+                Price = product.Price,
+                DiscountPrice = product.DiscountPrice,
+                TaxRate = product.TaxRate,
+                Stock = product.Stock,
+                Reviews = product.Reviews.Select(r => new ProductReviewDto
+                {
+                    Rating = r.Rating,
+                    Comment = r.Comment,
+                    CreatedAt = r.CreatedAt,
+                    UserName = r.UserName
+                }).ToList(),
+                Specifications = product.ProductSpecifications.Select(s => new ProductSpecificationDto
+                {
+                    Key = s.Key,
+                    Value = s.Value
+                }).ToList(),
+                Images = product.Images.Select(i => new ProductImageDto
+                {
+                    Url = i.Url,
+                    IsMain = i.IsMain
+                }).ToList(),
+                Category = new CategoryDto
+                {
+                    Name = product.Category?.Name ?? "-",
+                    Description = product.Category?.Description ?? "-"
+                },
+                Variants = product.Variants.Select(v => new ProductVariantDto
+                {
+                    Value = v.Value,
+                    Name = v.Name,
+                    Price = v.Price,
+                }).ToList()
+            }).ToList()
 
-        return Ok(category);
+        };
+        return Ok(result);
     }
 
     [HttpPost("AddCategory")]

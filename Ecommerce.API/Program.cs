@@ -18,6 +18,9 @@ builder.Services.AddScoped<ProductService>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<CategoryService>();
 
+builder.Services.AddScoped<IOrdersRepository, OrderRepository>();
+builder.Services.AddScoped<OrderServices>();
+
 // Add Swagger services
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

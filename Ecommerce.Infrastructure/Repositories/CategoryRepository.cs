@@ -15,29 +15,19 @@ public class CategoryRepository : ICategoryRepository
         _context = context;
     }
 
-    public async Task<(IEnumerable<Category>, int)> GetAllAsync(int pageNumber, int pageSize, string? search)
+    public async Task<IEnumerable<Category>> GetAllAsync()
     {
-        var query = _context.Categories.AsQueryable();
-
-        // Filtering
-        if (!string.IsNullOrWhiteSpace(search))
-        {
-            query = query.Where(c => c.Name.Contains(search));
-        }
-
-        var totalCount = await query.CountAsync();
-
-        var data = await query
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
+        var categories = await _context.Categories
+            .Include(p=>p.Products)
             .ToListAsync();
-
-        return (data, totalCount);
+        return categories;
     }
 
     public async Task<Category?> GetByIdAsync(int id)
     {
-        return await _context.Categories.FindAsync(id);
+        return await _context.Categories
+            .Include(p=>p.Products)
+            .FirstOrDefaultAsync(i => i.Id == id);
     }
 
     public async Task<Category> AddAsync(Category category)

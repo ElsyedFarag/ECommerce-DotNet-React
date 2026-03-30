@@ -13,9 +13,9 @@ public class CategoryService
         _repo = repo;
     }
 
-    public async Task<(IEnumerable<Category> Data, int TotalCount)> GetCategories(int pageNumber, int pageSize, string? search)
+    public async Task<IEnumerable<Category>> GetCategories()
     {
-        return await _repo.GetAllAsync(pageNumber, pageSize, search);
+        return await _repo.GetAllAsync();
     }
 
     public async Task<Category?> GetCategoryById(int id)

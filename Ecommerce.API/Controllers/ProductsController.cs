@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Ecommerce.Application.Dtos.Categories;
+﻿using Ecommerce.Application.Dtos.Categories;
 using Ecommerce.Application.Dtos.Products;
 using Ecommerce.Application.Services;
 using Ecommerce.Domain.Entities;
@@ -19,32 +18,24 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> Get(
-    [FromQuery] string search = "",
-    [FromQuery] int pageNumber = 1,
-    [FromQuery] int pageSize = 10)
+    public async Task<IActionResult> Get()
     {
-        var query = _service.GetProductsQueryable();
-
-        if (!string.IsNullOrEmpty(search))
-        {
-            query = query.Where(p => p.Name.Contains(search) || p.Description.Contains(search));
-        }
-
-        var totalItems = await query.CountAsync();
-
-        var products = await query
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
+        var products = await _service.GetProducts();
 
         var responseDtos = products.Select(x => new ProductDetailsDto
         {
             Id = x.Id,
             Name = x.Name,
-            Description = x.Description,
+            Slug = x.Slug,
+            SKU = x.SKU,
+            IsActive = x.IsActive,
+            IsDeleted = x.IsDeleted,
+            DeletedAt = x.DeletedAt,
+            ManageStock = x.ManageStock,
+            Description = x.Description ?? "-",
             Price = x.Price,
             DiscountPrice = x.DiscountPrice,
+            TaxRate = x.TaxRate,
             Stock = x.Stock,
             Reviews = x.Reviews.Select(r => new ProductReviewDto
             {
@@ -65,8 +56,8 @@ public class ProductsController : ControllerBase
             }).ToList(),
             Category = new CategoryDto
             {
-                Name = x.Category.Name,
-                Description = x.Category.Description
+                Name = x.Category?.Name ?? "-",
+                Description = x.Category!.Description ?? "-"
             },
             Variants = x.Variants.Select(v => new ProductVariantDto
             {
@@ -76,14 +67,7 @@ public class ProductsController : ControllerBase
             }).ToList()
         });
 
-        return Ok(new
-        {
-            TotalItems = totalItems,
-            PageNumber = pageNumber,
-            PageSize = pageSize,
-            TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize),
-            Items = responseDtos
-        });
+        return Ok( responseDtos);
     }
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
@@ -96,9 +80,16 @@ public class ProductsController : ControllerBase
         {
             Id = product.Id,
             Name = product.Name,
-            Description = product.Description,
+            Slug = product.Slug,
+            SKU = product.SKU,
+            IsActive = product.IsActive,
+            IsDeleted = product.IsDeleted,
+            DeletedAt = product.DeletedAt,
+            ManageStock = product.ManageStock,
+            Description = product.Description ?? "-",
             Price = product.Price,
             DiscountPrice = product.DiscountPrice,
+            TaxRate = product.TaxRate,
             Stock = product.Stock,
             Reviews = product.Reviews.Select(r => new ProductReviewDto
             {
@@ -119,8 +110,8 @@ public class ProductsController : ControllerBase
             }).ToList(),
             Category = new CategoryDto
             {
-                Name = product.Category.Name,
-                Description = product.Category.Description
+                Name = product.Category?.Name ?? "-",
+                Description = product.Category?.Description ?? "-"
             },
             Variants = product.Variants.Select(v => new ProductVariantDto
             {
@@ -145,6 +136,12 @@ public class ProductsController : ControllerBase
             Price = model.Price,
             DiscountPrice = model.DiscountPrice,
             Stock = model.Stock,
+            ManageStock = model.ManageStock,
+            SKU = model.SKU,
+            Slug = model.Slug,
+            TaxRate = model.TaxRate,
+            IsActive = model.IsActive,
+            CreatedAt = DateTime.UtcNow, 
             CategoryId = model.CategoryId,
 
             Variants = model.Variants?.Select(v => new ProductVariant
@@ -212,43 +209,38 @@ public class ProductsController : ControllerBase
         {
             Id = result.Id,
             Name = result.Name,
-            Description = result.Description,
+            Description = result.Description ?? "-",
             Price = result.Price,
             DiscountPrice = result.DiscountPrice,
             Stock = result.Stock,
-
-            Reviews = result.Reviews?.Select(r => new ProductReviewDto
+            Reviews = result.Reviews.Select(r => new ProductReviewDto
             {
                 Rating = r.Rating,
                 Comment = r.Comment,
                 CreatedAt = r.CreatedAt,
                 UserName = r.UserName
-            }).ToList() ?? new List<ProductReviewDto>(),
-
-            Specifications = result.ProductSpecifications?.Select(s => new ProductSpecificationDto
+            }).ToList(),
+            Specifications = result.ProductSpecifications.Select(s => new ProductSpecificationDto
             {
                 Key = s.Key,
                 Value = s.Value
-            }).ToList() ?? new List<ProductSpecificationDto>(),
-
-            Images = result.Images?.Select(i => new ProductImageDto
+            }).ToList(),
+            Images = result.Images.Select(i => new ProductImageDto
             {
                 Url = i.Url,
                 IsMain = i.IsMain
-            }).ToList() ?? new List<ProductImageDto>(),
-
-            Category = result.Category == null ? null : new CategoryDto
+            }).ToList(),
+            Category = new CategoryDto
             {
-                Name = result.Category.Name,
-                Description = result.Category.Description
+                Name = result.Category?.Name ?? "-",
+                Description = result.Category?.Description ?? "-"
             },
-
-            Variants = result.Variants?.Select(v => new ProductVariantDto
+            Variants = result.Variants.Select(v => new ProductVariantDto
             {
-                Name = v.Name,
                 Value = v.Value,
-                Price = v.Price
-            }).ToList() ?? new List<ProductVariantDto>()
+                Name = v.Name,
+                Price = v.Price,
+            }).ToList()
         };
 
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, responseDto);
