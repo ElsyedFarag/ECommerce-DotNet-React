@@ -1,72 +1,192 @@
-﻿using Ecommerce.Application.Dtos;
-using Ecommerce.Application.Dtos.Carts;
+﻿using Ecommerce.Application.Dtos.Carts;
 using Ecommerce.Application.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Ecommerce.API.Controllers;
 
+
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
 public class CartController : ControllerBase
 {
     private readonly CartService _cartService;
-    private readonly OrderServices _orderServices;
 
-    public CartController(CartService cartService, OrderServices orderServices)
+    public CartController(CartService cartService)
     {
         _cartService = cartService;
-        _orderServices = orderServices;
     }
 
     [HttpGet("{customerId}")]
-    public async Task<IActionResult> GetCart(int customerId)
+    public async Task<ActionResult<CartDto>> GetCart(string customerId)
     {
         var cart = await _cartService.GetOrCreateCartAsync(customerId);
-        return Ok(cart);
+
+        var customer = cart.Customer?.User;
+        var customerName = $"{customer?.FirstName} {customer?.LastName}".Trim();
+
+        var cartDto = new CartDto
+        {
+            Id = cart.Id,
+            CustomerId = cart.CustomerId,
+            CustomerName = string.IsNullOrWhiteSpace(customerName) ? "Unknown" : customerName,
+            CustomerEmail = customer?.Email ?? "Unknown",
+            CustomerPhone = customer?.PhoneNumber ?? "Unknown",
+            SubTotal = cart.SubTotal,
+            TotalDiscount = cart.TotalDiscount,
+            TotalTax = cart.TotalTax,
+            TotalAmount = cart.TotalAmount,
+            Items = cart.Items?.Select(i => new CartItemDto
+            {
+                Id = i.Id, 
+                ProductId = i.ProductId,
+                ProductName = i.Product.Name,
+                ProductSku = i.Product.SKU ?? "Unknown",
+                Quantity = i.Quantity,
+                Price = i.Price,
+                Discount = i.Discount,
+                Tax = i.Tax,
+                TotalPrice = i.TotalPrice
+            }).ToList() ?? new List<CartItemDto>()
+        };
+
+        return Ok(cartDto);
     }
 
     [HttpPost("{customerId}/add")]
-    public async Task<IActionResult> AddItem(int customerId, [FromBody] CartItemDto itemDto)
+    public async Task<IActionResult> AddItem(string customerId, [FromBody] CartItemCreateDto itemDto)
     {
         var cart = await _cartService.AddItemAsync(customerId, itemDto.ProductId, itemDto.Quantity);
-        return Ok(cart);
+
+        var customer = cart.Customer?.User;
+        var customerName = $"{customer?.FirstName} {customer?.LastName}".Trim();
+
+        var cartDto = new CartDto
+        {
+            Id = cart.Id,
+            CustomerId = cart.CustomerId,
+            CustomerName = string.IsNullOrWhiteSpace(customerName) ? "Unknown" : customerName,
+            CustomerEmail = customer?.Email ?? "Unknown",
+            CustomerPhone = customer?.PhoneNumber ?? "Unknown",
+            SubTotal = cart.SubTotal,
+            TotalDiscount = cart.TotalDiscount,
+            TotalTax = cart.TotalTax,
+            TotalAmount = cart.TotalAmount,
+            Items = cart.Items?.Select(i => new CartItemDto
+            {
+                Id = i.Id,
+                ProductId = i.ProductId,
+                ProductName = i.Product.Name,
+                ProductSku = i.Product.SKU ?? "Unknown",
+                Quantity = i.Quantity,
+                Price = i.Price,
+                Discount = i.Discount,
+                Tax = i.Tax,
+                TotalPrice = i.TotalPrice
+            }).ToList() ?? new List<CartItemDto>()
+        };
+        return Ok(cartDto);
+    }
+    [HttpPost("{customerId}/update")]
+    public async Task<IActionResult> UpdateItemQuantity(string customerId, [FromBody] CartItemUpdateDto itemDto)
+    {
+        var cart = await _cartService.UpdateItemQuantityAsync(customerId, itemDto.ProductId, itemDto.Quantity);
+        var customer = cart.Customer?.User;
+        var customerName = $"{customer?.FirstName} {customer?.LastName}".Trim();
+
+        var cartDto = new CartDto
+        {
+            Id = cart.Id,
+            CustomerId = cart.CustomerId,
+            CustomerName = string.IsNullOrWhiteSpace(customerName) ? "Unknown" : customerName,
+            CustomerEmail = customer?.Email ?? "Unknown",
+            CustomerPhone = customer?.PhoneNumber ?? "Unknown",
+            SubTotal = cart.SubTotal,
+            TotalDiscount = cart.TotalDiscount,
+            TotalTax = cart.TotalTax,
+            TotalAmount = cart.TotalAmount,
+            Items = cart.Items?.Select(i => new CartItemDto
+            {
+                Id = i.Id,
+                ProductId = i.ProductId,
+                ProductName = i.Product.Name,
+                ProductSku = i.Product.SKU ?? "Unknown",
+                Quantity = i.Quantity,
+                Price = i.Price,
+                Discount = i.Discount,
+                Tax = i.Tax,
+                TotalPrice = i.TotalPrice
+            }).ToList() ?? new List<CartItemDto>()
+        };
+        return Ok(cartDto);
     }
 
     [HttpPost("{customerId}/remove")]
-    public async Task<IActionResult> RemoveItem(int customerId, [FromBody] CartItemDto itemDto)
+    public async Task<IActionResult> RemoveItem(string customerId, [FromBody] CartItemDto itemDto)
     {
         var cart = await _cartService.RemoveItemAsync(customerId, itemDto.ProductId);
-        return Ok(cart);
+        var customer = cart.Customer?.User;
+        var customerName = $"{customer?.FirstName} {customer?.LastName}".Trim();
+
+        var cartDto = new CartDto
+        {
+            Id = cart.Id,
+            CustomerId = cart.CustomerId,
+            CustomerName = string.IsNullOrWhiteSpace(customerName) ? "Unknown" : customerName,
+            CustomerEmail = customer?.Email ?? "Unknown",
+            CustomerPhone = customer?.PhoneNumber ?? "Unknown",
+            SubTotal = cart.SubTotal,
+            TotalDiscount = cart.TotalDiscount,
+            TotalTax = cart.TotalTax,
+            TotalAmount = cart.TotalAmount,
+            Items = cart.Items?.Select(i => new CartItemDto
+            {
+                Id = i.Id,
+                ProductId = i.ProductId,
+                ProductName = i.Product.Name,
+                ProductSku = i.Product.SKU ?? "Unknown",
+                Quantity = i.Quantity,
+                Price = i.Price,
+                Discount = i.Discount,
+                Tax = i.Tax,
+                TotalPrice = i.TotalPrice
+            }).ToList() ?? new List<CartItemDto>()
+        };
+        return Ok(cartDto);
     }
 
     [HttpPost("{customerId}/clear")]
-    public async Task<IActionResult> ClearCart(int customerId)
+    public async Task<IActionResult> ClearCart(string customerId)
     {
         var cart = await _cartService.ClearCartAsync(customerId);
-        return Ok(cart);
-    }
+        var customer = cart.Customer?.User;
+        var customerName = $"{customer?.FirstName} {customer?.LastName}".Trim();
 
-    [HttpPost("{customerId}/checkout")]
-    public async Task<IActionResult> Checkout(int customerId, [FromBody] OrderCreateDto orderDto)
-    {
-        // تحويل Cart → Order
-        var cart = await _cartService.GetOrCreateCartAsync(customerId);
-
-        if (!cart.Items.Any())
-            return BadRequest("Cart is empty");
-
-        // ملء الـ orderDto من Cart
-        orderDto.Items = cart.Items.Select(i => new OrderItemCreateDto
+        var cartDto = new CartDto
         {
-            ProductId = i.ProductId,
-            Quantity = i.Quantity
-        }).ToList();
-
-        var order = await _orderServices.CreateOrderAsync(orderDto);
-
-        // مسح السلة بعد إنشاء الطلب
-        await _cartService.ClearCartAsync(customerId);
-
-        return Ok(order);
+            Id = cart.Id,
+            CustomerId = cart.CustomerId,
+            CustomerName = string.IsNullOrWhiteSpace(customerName) ? "Unknown" : customerName,
+            CustomerEmail = customer?.Email ?? "Unknown",
+            CustomerPhone = customer?.PhoneNumber ?? "Unknown",
+            SubTotal = cart.SubTotal,
+            TotalDiscount = cart.TotalDiscount,
+            TotalTax = cart.TotalTax,
+            TotalAmount = cart.TotalAmount,
+            Items = cart.Items?.Select(i => new CartItemDto
+            {
+                Id = i.Id,
+                ProductId = i.ProductId,
+                ProductName = i.Product.Name,
+                ProductSku = i.Product.SKU ?? "Unknown",
+                Quantity = i.Quantity,
+                Price = i.Price,
+                Discount = i.Discount,
+                Tax = i.Tax,
+                TotalPrice = i.TotalPrice
+            }).ToList() ?? new List<CartItemDto>()
+        };
+        return Ok(cartDto);
     }
 }

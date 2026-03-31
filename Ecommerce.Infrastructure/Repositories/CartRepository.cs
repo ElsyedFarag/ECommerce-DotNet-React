@@ -14,10 +14,13 @@ public class CartRepository : ICartRepository
         _context = context;
     }
 
-    public async Task<Cart?> GetCartByCustomerIdAsync(int customerId)
+    public async Task<Cart?> GetCartByCustomerIdAsync(string customerId)
     {
         return await _context.Carts
+            .Include(c => c.Customer)
+              .ThenInclude(u=>u.User)
             .Include(c => c.Items)
+               .ThenInclude(i => i.Product)
             .FirstOrDefaultAsync(c => c.CustomerId == customerId);
     }
 

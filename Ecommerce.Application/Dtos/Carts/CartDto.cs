@@ -3,7 +3,7 @@
 public class CartDto
 {
     public int Id { get; set; }
-    public int CustomerId { get; set; }
+    public string CustomerId { get; set; } = null!;
     public string CustomerName { get; set; } = null!;
     public string CustomerEmail { get; set; } = null!;
     public string CustomerPhone { get; set; } = null!;
