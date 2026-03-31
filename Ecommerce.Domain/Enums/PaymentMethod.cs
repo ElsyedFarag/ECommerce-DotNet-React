@@ -2,8 +2,11 @@
 
 public enum PaymentMethod
 {
-    Cash,
+    CashOnDelivery,
     CreditCard,
+    Visa,
+    MasterCard,
+    PayPal,
     VodafoneCash,
     BankTransfer
 }

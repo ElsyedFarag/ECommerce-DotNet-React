@@ -41,4 +41,16 @@ public class CategoryRepository : ICategoryRepository
     {
         return await _context.Categories.AnyAsync(expression);
     }
+
+    public async Task<bool> DeleteAsync(int? id)
+    {
+        if (!id.HasValue) return false;
+        var category = await _context.Categories.FindAsync(id);
+        if (category == null) return false;
+
+        category.IsDeleted = true;
+        category.DeletedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+        return true;
+    }
 }

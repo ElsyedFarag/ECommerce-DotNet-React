@@ -32,4 +32,9 @@ public class CategoryService
         var newCategory = await _repo.AddAsync(category);
         return newCategory;
     }
+    public async Task<bool> DeleteAsync(int? id)
+    {
+        var isDeleted = await _repo.DeleteAsync(id);
+        return isDeleted;
+    }
 }

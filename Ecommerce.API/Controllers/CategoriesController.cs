@@ -18,7 +18,7 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> Get()
+    public async Task<IActionResult> GetCategories()
     {
         var categories = await _service.GetCategories();
 
@@ -76,8 +76,8 @@ public class CategoriesController : ControllerBase
         return Ok(result);
     }
 
-    [HttpGet("GetCategoryById/{id}")]
-    public async Task<IActionResult> GetById(int id)
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetCategoryById(int id)
     {
         var category = await _service.GetCategoryById(id);
 
@@ -137,8 +137,8 @@ public class CategoriesController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPost("AddCategory")]
-    public async Task<IActionResult> Create(CategoryDto model)
+    [HttpPost]
+    public async Task<IActionResult> CreateCategory(CategoryDto model)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -157,7 +157,22 @@ public class CategoriesController : ControllerBase
         var result = await _service.AddCategory(category);
 
 
-        return CreatedAtAction(nameof(GetById), new { id = result.Id },
+        return CreatedAtAction(nameof(GetCategoryById), new { id = result.Id },
             result);
     }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteCategory(int id)
+    {
+        if (id <= 0)
+            return BadRequest("Invalid category ID.");
+
+        var isDeleted = await _service.DeleteAsync(id);
+
+        if (!isDeleted)
+            return NotFound("category not found or already deleted.");
+
+        return Ok("category deleted successfully!");
+    }
+
 }

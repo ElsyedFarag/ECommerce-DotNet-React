@@ -11,4 +11,6 @@ public interface ICategoryRepository
     Task<bool> IsValidAsync(Expression<Func<Category, bool>> expression);
 
     Task<Category> AddAsync(Category category);
+
+    Task<bool> DeleteAsync(int? id);
 }

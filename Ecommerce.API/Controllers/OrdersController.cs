@@ -20,13 +20,14 @@ public class OrdersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> Get()
+    public async Task<IActionResult> GetOrders()
     {
         var result = await _orderServices.GetOrdersAsync();
         return Ok(result);
     }
+
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetOrder(int id)
+    public async Task<IActionResult> GetOrderById(int id)
     {
         var order = await _orderServices.GetOrderByIdAsync(id);
 
@@ -46,116 +47,47 @@ public class OrdersController : ControllerBase
             Tax = order.Tax,
             TotalAmount = order.TotalAmount,
             Notes = order.Notes,
+            AdminNotes = order.AdminNotes,
+            CouponCode = order.CouponCode,
+            Currency = order.Currency,
+            CustomerId = order.CustomerId,
+            CustomerName = order.CustomerName,
+            CustomerEmail = order.CustomerEmail,
+            CustomerPhone = order.CustomerPhone,
+            UpdatedAt = order.UpdatedAt,
             Items = order.Items.Select(i => new OrderItemDto
             {
                 Id = i.Id,
                 ProductId = i.ProductId,
+                ProductName = i.ProductName,
+                ProductSku = i.ProductSku,
                 Quantity = i.Quantity,
                 Price = i.Price,
                 Tax = i.Tax,
-                TotalPrice = i.TotalPrice
+                Discount = i.Discount.Value,
+                TotalPrice = i.TotalPrice,
             }).ToList()
         };
 
         return Ok(result);
     }
+
     [HttpPost]
     public async Task<IActionResult> CreateOrder(OrderCreateDto orderDto)
     {
         if (orderDto.Items == null || !orderDto.Items.Any())
             return BadRequest("Order must contain items");
 
-        var order = new Order
+        try
         {
-            CreatedAt = DateTime.UtcNow,
-            Notes = orderDto.Notes,
-            Status = OrderStatus.Pending,
-            PaymentStatus = PaymentStatus.Pending,
-            Items = new List<OrderItem>()
-        };
-
-        decimal subTotal = 0;
-        decimal totalTax = 0;
-        decimal totalDiscount = 0;
-
-        foreach (var item in orderDto.Items)
-        {
-            if (item.Quantity <= 0)
-                return BadRequest($"Invalid quantity for product {item.ProductId}");
-
-            var product = await _productService.GetProductById(item.ProductId);
-            if (product == null)
-                return BadRequest($"Product {item.ProductId} not found");
-
-            if (!product.IsActive || product.IsDeleted)
-                return BadRequest($"Product {product.Name} is not available");
-
-            if (product.ManageStock && item.Quantity > product.Stock)
-                return BadRequest($"Not enough stock for product {product.Name}");
-
-            // السعر الفعلي بعد الخصم
-            decimal effectivePrice = product.DiscountPrice.HasValue && product.DiscountPrice.Value > 0 && product.DiscountPrice.Value < product.Price
-                                    ? product.DiscountPrice.Value
-                                    : product.Price;
-
-            decimal itemSubTotal = effectivePrice * item.Quantity;
-            decimal tax = itemSubTotal * product.TaxRate / 100;
-            decimal discount = (product.Price - effectivePrice) * item.Quantity;
-            decimal total = itemSubTotal + tax;
-
-            subTotal += itemSubTotal;
-            totalTax += tax;
-            totalDiscount += discount;
-
-            order.Items.Add(new OrderItem
-            {
-                ProductId = product.Id,
-                Quantity = item.Quantity,
-                Price = product.Price,
-                Discount = discount,
-                Tax = tax,
-                TotalPrice = total
-            });
-
-            // تحديث المخزون
-            if (product.ManageStock)
-                product.Stock -= item.Quantity;
+            var result = await _orderServices.CreateOrderAsync(orderDto);
+            return Ok(result);
         }
-
-        order.SubTotal = subTotal;
-        order.Tax = totalTax;
-        order.Discount = totalDiscount;
-        order.TotalAmount = subTotal + totalTax; // خصم محسوب لكل عنصر، لا تحتاج خصم آخر
-
-        // حفظ الطلب
-        var result = await _orderServices.AddOrdersAsync(order);
-
-        // تحويل للـ DTO
-        var resultDto = new OrderDto
+        catch (Exception ex)
         {
-            Id = result.Id,
-            OrderNumber = result.OrderNumber,
-            CreatedAt = result.CreatedAt,
-            Status = result.Status.ToString(),
-            PaymentStatus = result.PaymentStatus.ToString(),
-            SubTotal = result.SubTotal,
-            Discount = result.Discount,
-            ShippingCost = result.ShippingCost,
-            Tax = result.Tax,
-            TotalAmount = result.TotalAmount,
-            Notes = result.Notes,
-            Items = result.Items.Select(i => new OrderItemDto
-            {
-                Id = i.Id,
-                ProductId = i.ProductId,
-                Quantity = i.Quantity,
-                Price = i.Price,
-                Discount = i.Discount,
-                Tax = i.Tax,
-                TotalPrice = i.TotalPrice
-            }).ToList()
-        };
-
-        return CreatedAtAction(nameof(Get), new { id = result.Id }, resultDto);
+            // يمكن تحسينه لاحقاً بإرجاع نوع الخطأ المناسب
+            return BadRequest(new { error = ex.Message });
+        }
+        
     }
 }

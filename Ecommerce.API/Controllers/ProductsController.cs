@@ -3,7 +3,6 @@ using Ecommerce.Application.Dtos.Products;
 using Ecommerce.Application.Services;
 using Ecommerce.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Ecommerce.API.Controllers;
 
@@ -18,7 +17,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> Get()
+    public async Task<IActionResult> GetProducts()
     {
         var products = await _service.GetProducts();
 
@@ -69,8 +68,9 @@ public class ProductsController : ControllerBase
 
         return Ok( responseDtos);
     }
+
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(int id)
+    public async Task<IActionResult> GetProductById(int id)
     {
         var product = await _service.GetProductById(id);
 
@@ -123,8 +123,9 @@ public class ProductsController : ControllerBase
 
         return Ok(responseDto);
     }
-    [HttpPost("AddProduct")]
-    public async Task<IActionResult> Create([FromForm] ProductCreateDto model)
+    
+    [HttpPost]
+    public async Task<IActionResult> CreateProduct([FromForm] ProductCreateDto model)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -243,11 +244,11 @@ public class ProductsController : ControllerBase
             }).ToList()
         };
 
-        return CreatedAtAction(nameof(GetById), new { id = result.Id }, responseDto);
+        return CreatedAtAction(nameof(GetProductById), new { id = result.Id }, responseDto);
     }
 
-    [HttpDelete("DeleteProduct/{id}")]
-    public async Task<IActionResult> Delete(int id)
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteProduct(int id)
     {
         if (id <= 0)
             return BadRequest("Invalid product ID.");

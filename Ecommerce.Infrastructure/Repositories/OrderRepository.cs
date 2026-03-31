@@ -32,4 +32,11 @@ public class OrderRepository : IOrdersRepository
             .Include(o => o.Items)
             .FirstOrDefaultAsync(o => o.Id == id);
     }
+
+    public async Task<Order?> UpdateAsync(Order order)
+    {
+        _context.Orders.Update(order);
+        await _context.SaveChangesAsync();
+        return order;
+    }
 }

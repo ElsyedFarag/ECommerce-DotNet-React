@@ -10,4 +10,6 @@ public class OrderItemDto
     public decimal Tax { get; set; }
     public decimal Discount { get; set; }
     public decimal TotalPrice { get; set; }
+    public string ProductName { get; set; } = null!;
+    public string? ProductSku { get; set; }
 }
